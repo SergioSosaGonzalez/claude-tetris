@@ -29,7 +29,7 @@ jobs:
       - name: Run OpenCode Review
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
         run: |
           # Obtener el diff de la rama base contra la rama actual
           git diff origin/${{ github.base_ref }}...HEAD > pr_diff.patch
