@@ -1,0 +1,41 @@
+name: OpenCode Code Review
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install OpenCode & GitHub CLI
+        run: |
+          npm install -g opencode
+
+      - name: Run OpenCode Review
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Obtener el diff de la rama base contra la rama actual
+          git diff origin/${{ github.base_ref }}...HEAD > pr_diff.patch
+
+          # Invocación de OpenCode en modo no interactivo
+          REVIEW_FEEDBACK=$(opencode --prompt "Revisa el siguiente diff de código en busca de posibles bugs, vulnerabilidades de seguridad o mejoras de rendimiento. Sé conciso y da sugerencias en formato Markdown:\n\n$(cat pr_diff.patch)")
+
+          # Publicar el resultado como comentario en el PR usando GitHub CLI
+          gh pr comment ${{ github.event.pull_request.number }} --body "$REVIEW_FEEDBACK"
