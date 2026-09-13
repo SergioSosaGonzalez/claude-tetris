@@ -37,7 +37,6 @@ jobs:
           ISSUE_BODY="${{ github.event.issue.body }}"
 
           # Le pedimos a OpenCode que analice el problema sin modificar archivos
-          ANALYSIS=$(opencode --model openai/gpt-4o-mini --non-interactive --prompt "Analiza la siguiente solicitud: $ISSUE_TITLE. Detalles: $ISSUE_BODY")
-
+          ANALYSIS=$(opencode run --model openai/gpt-4o-mini --auto "Analiza la siguiente solicitud: $ISSUE_TITLE. Detalles: $ISSUE_BODY")
           # Publicar el análisis directamente como un comentario en el Issue
           gh issue comment ${{ github.event.issue.number }} --body "$ANALYSIS"
