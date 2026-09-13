@@ -31,12 +31,13 @@ jobs:
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
+          CI: true
         run: |
           ISSUE_TITLE="${{ github.event.issue.title }}"
           ISSUE_BODY="${{ github.event.issue.body }}"
 
           # Le pedimos a OpenCode que analice el problema sin modificar archivos
-          ANALYSIS=$(opencode --model openai/gpt-4o-mini --prompt "Analiza la siguiente solicitud/bug reportado en este repositorio y propone una solución técnica detallada o identifica los archivos afectados:\n\nTítulo: $ISSUE_TITLE\nDescripción: $ISSUE_BODY")
+          ANALYSIS=$(opencode --model openai/gpt-4o-mini --non-interactive --prompt "Analiza la siguiente solicitud: $ISSUE_TITLE. Detalles: $ISSUE_BODY")
 
           # Publicar el análisis directamente como un comentario en el Issue
           gh issue comment ${{ github.event.issue.number }} --body "$ANALYSIS"
