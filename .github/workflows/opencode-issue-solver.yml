@@ -1,0 +1,42 @@
+name: OpenCode Issue Solver
+
+on:
+  issues:
+    types: [opened, labeled]
+
+jobs:
+  analyze-issue:
+    # Se ejecuta si el Issue recién abierto tiene la etiqueta 'opencode' 
+    # o si se le asigna manualmente la etiqueta 'opencode'
+    if: contains(github.event.issue.labels.*.name, 'opencode')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install OpenCode
+        run: npm install -g opencode
+
+      - name: Analyze Issue with OpenCode
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+        run: |
+          ISSUE_TITLE="${{ github.event.issue.title }}"
+          ISSUE_BODY="${{ github.event.issue.body }}"
+
+          # Le pedimos a OpenCode que analice el problema sin modificar archivos
+          ANALYSIS=$(opencode --model openai/gpt-4o-mini --prompt "Analiza la siguiente solicitud/bug reportado en este repositorio y propone una solución técnica detallada o identifica los archivos afectados:\n\nTítulo: $ISSUE_TITLE\nDescripción: $ISSUE_BODY")
+
+          # Publicar el análisis directamente como un comentario en el Issue
+          gh issue comment ${{ github.event.issue.number }} --body "$ANALYSIS"
